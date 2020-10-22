@@ -4,9 +4,10 @@ import random
 import subprocess
 
 import pandas as pd
-from PyQt5.QtCore import QThread, pyqtSignal, QAbstractTableModel, Qt
+from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QFileDialog, QPushButton, QVBoxLayout,
-                             QHBoxLayout, QFrame, QLabel, QMessageBox, QTableWidget)
+                             QHBoxLayout, QFrame, QLabel, QMessageBox, QTableWidget,
+                             QTableWidgetItem, QScrollArea)
 
 temp_id = str(os.getpid()) + '_' + str(random.randint(0, 9999))
 ab_database = "/home/dengqiuyang/biosoft/Kaptive/reference_database/Acinetobacter_baumannii_k_locus_primary_reference" \
@@ -70,9 +71,9 @@ class MultiDetect(QWidget):
         # left_layout.addStretch(3)
 
         right_frame = QFrame()
-        right_layout = QVBoxLayout(right_frame)
+        right_widget = QScrollArea(right_frame)
+        right_layout = QVBoxLayout(right_widget)
         right_layout.addWidget(self.tableview)
-        self.tableview.resize(650, 500)
         right_frame.setFrameShape(QFrame.Box)
 
         layout.addWidget(left_frame)
@@ -119,14 +120,18 @@ class MultiDetect(QWidget):
             self.labe2.setText('{} 执行完成!'.format(self.process_id[msg]))
             if os.path.isfile(res_file[msg]):
                 if msg == 'mlst':
-                    # print('ok')
                     df = pd.read_table(res_file[msg],
                                        names=['File', 'scheme', 'ST'] + ['gene_' + str(i) for i in range(1, 8)])
-                    # print(df)
                 else:
                     df = pd.read_table(res_file[msg])
-                model = pandasModel(df)
-                self.tableview.setModel(model)
+                print(df.shape)
+                row, col = df.shape
+                self.tableview.setRowCount(row)
+                self.tableview.setColumnCount(col)
+                self.tableview.setHorizontalHeaderLabels(self.df.columns.tolist())
+                for i in range(row):
+                    for j in range(col):
+                        self.tableview.setItem(i, j, QTableWidgetItem(df.iloc[i, j]))
 
         if idd == 0:
             err = msg.split("::")
@@ -207,26 +212,3 @@ class Thread(QThread):
     def signal(self):
         return self._signal
 
-
-class pandasModel(QAbstractTableModel):
-
-    def __init__(self, data):
-        QAbstractTableModel.__init__(self)
-        self._data = data
-
-    def rowCount(self, parent=None):
-        return self._data.shape[0]
-
-    def columnCount(self, parnet=None):
-        return self._data.shape[1]
-
-    def data(self, index, role=Qt.DisplayRole):
-        if index.isValid():
-            if role == Qt.DisplayRole:
-                return str(self._data.iloc[index.row(), index.column()])
-        return None
-
-    # def headerData(self, col, orientation, role):
-    #     if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-    #         return self._data.columns[col]
-    #     return None

@@ -54,7 +54,7 @@ if __name__ == "__main__":
     splash = SplashScreen()
     splash.show()
     splash.showMessage('启动中...', Qt.AlignBottom | Qt.AlignCenter, Qt.black)
-    time.sleep(1.5)
+    time.sleep(1)
     demo = Main()
     splash.finish(demo)
     demo.show()
