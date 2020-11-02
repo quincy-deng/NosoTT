@@ -68,15 +68,8 @@ class NosoTT_UI(QWidget):
     # NosoTT casedate窗口
     def show_casedate(self):
         casedate = CaseDate(self.select_df)
-        casedate.btn_savecsv.clicked.connect(self.saveCSV)
+        # casedate.btn_savecsv.clicked.connect(self.saveCSV)
         casedate.exec_()
-
-    # 子窗口槽函数
-    def saveCSV(self):
-        pass
-
-    def checkCSV(self):
-        pass
 
     def execute(self):
         pass
@@ -94,6 +87,9 @@ class CaseDate(QDialog):
         self.setFixedSize(720, 540)
         self.df = df[['name', 'item', 'Admdate', 'Sampdate', 'Chgdate']]
         self.mainUI()
+
+        # 槽函数
+        self.btn_savecsv.clicked.connect(self.saveCSV)
         self.show()
 
     def mainUI(self):
@@ -120,3 +116,9 @@ class CaseDate(QDialog):
 
         layout.addWidget(scrollArea)
         self.setLayout(layout)
+
+    def checkCSV(self):
+        pass
+
+    def saveCSV(self):
+        pass

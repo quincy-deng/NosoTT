@@ -71,9 +71,13 @@ class MultiDetect(QWidget):
         # left_layout.addStretch(3)
 
         right_frame = QFrame()
-        right_widget = QScrollArea(right_frame)
-        right_layout = QVBoxLayout(right_widget)
-        right_layout.addWidget(self.tableview)
+        right_layout = QHBoxLayout(right_frame)
+        right_widget = QScrollArea()
+        right_layout.addWidget(right_widget)
+        scroll_layout = QHBoxLayout(right_widget)
+        scroll_layout.addWidget(self.tableview)
+        # right_layout.addWidget(right_widget)
+        # right_layout.addWidget(self.tableview)
         right_frame.setFrameShape(QFrame.Box)
 
         layout.addWidget(left_frame)
@@ -124,14 +128,13 @@ class MultiDetect(QWidget):
                                        names=['File', 'scheme', 'ST'] + ['gene_' + str(i) for i in range(1, 8)])
                 else:
                     df = pd.read_table(res_file[msg])
-                print(df.shape)
                 row, col = df.shape
                 self.tableview.setRowCount(row)
                 self.tableview.setColumnCount(col)
-                self.tableview.setHorizontalHeaderLabels(self.df.columns.tolist())
+                self.tableview.setHorizontalHeaderLabels(df.columns.tolist())
                 for i in range(row):
                     for j in range(col):
-                        self.tableview.setItem(i, j, QTableWidgetItem(df.iloc[i, j]))
+                        self.tableview.setItem(i, j, QTableWidgetItem(str(df.iloc[i, j])))
 
         if idd == 0:
             err = msg.split("::")
@@ -150,15 +153,15 @@ def execute_shell_command(commandline):
         return stderr
 
 
-def execute_abricate(filenames, process_id):
+def execute_abricate(filenames):
     commandline_abricate = 'conda run -n abricate abricate {} >output/results_{}.tab;conda run -n abricate ' \
                            'abricate --summary output/results_{}.tab >output/summary_{}.tab'.format(
-                            ' '.join(filenames), process_id, process_id, process_id)
+                            ' '.join(filenames), temp_id, temp_id, temp_id)
     return execute_shell_command(commandline_abricate)
 
 
-def execute_mlst(filenames, process_id):
-    command_mlst = 'conda run -n mlst mlst -q {} >output/{}.tsv'.format(' '.join(filenames), process_id)
+def execute_mlst(filenames):
+    command_mlst = 'conda run -n mlst mlst -q {} >output/{}.tsv'.format(' '.join(filenames), temp_id)
     return execute_shell_command(command_mlst)
 
 
@@ -179,21 +182,21 @@ class Thread(QThread):
                 self._signal.emit(1, 'kaptive')
 
         elif self.process == 'mlst':
-            res = execute_mlst(self.samples, self.process)
+            res = execute_mlst(self.samples)
             if res != 'ok':
                 self._signal.emit(0, 'mlst::{}'.format(res))
             else:
                 self._signal.emit(1, 'mlst')
 
         elif self.process == 'abricate':
-            res = execute_abricate(self.samples, self.process)
+            res = execute_abricate(self.samples)
             if res != 'ok':
                 self._signal.emit(0, 'abricate::{}'.format(res))
             else:
                 self._signal.emit(1, 'abricate')
 
     def execute_kaptive(self):
-        res_st = execute_mlst(self.samples, self.process)
+        res_st = execute_mlst(self.samples)
         if res_st != 'ok':
             return "mlst::{}".format(res_st)
         df = pd.read_table('output/{}.tsv'.format(temp_id),
@@ -211,4 +214,3 @@ class Thread(QThread):
     @property
     def signal(self):
         return self._signal
-
