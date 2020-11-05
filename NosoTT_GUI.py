@@ -1,8 +1,35 @@
+import os
+import re
+import glob
 import pandas as pd
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import (QPushButton, QLabel, QVBoxLayout, QHBoxLayout,
                              QWidget, QFileDialog, QTextEdit, QScrollArea,
-                             QDialog, QTableWidget, QTableWidgetItem, QDateEdit)
+                             QDialog, QTableWidget, QTableWidgetItem, QDateEdit, QMessageBox)
+
+
+def replaceSuffix(filename):
+    filename = os.path.basename(filename)
+    suffixs = ["{}{}{}.{}.gz".format(i, j, n, k) for i in ["_", "."] for n in ["1", "2"] for j in ["R", ""] for k in
+               ["fastq", "fq"]]
+    for suffix in suffixs:
+        filename = filename.replace(suffix, "")
+    return filename
+
+
+def produceFileConfig(files):
+    filenames = [replaceSuffix(i) for i in files]
+    file_dict = dict()
+    for k, v in zip(filenames, files):
+        if k not in file_dict:
+            file_dict[k] = [v]
+        else:
+            file_dict[k].append(v)
+    [file_dict.pop(k) for k, v in file_dict.items() if len(v) != 2]
+    if len(file_dict) > 0:
+        return True
+    else:
+        return False
 
 
 class NosoTT_UI(QWidget):
@@ -49,6 +76,8 @@ class NosoTT_UI(QWidget):
         left_panel.addWidget(self.btn_casedate)
         left_panel.addStretch(2)
         left_panel.addWidget(self.btn_execute)
+        left_panel.addStretch(1)
+        left_panel.addWidget(QLabel("运行日志"))
         left_panel.addWidget(self.text_info)
         left_panel.addStretch(1)
 
@@ -72,6 +101,23 @@ class NosoTT_UI(QWidget):
         casedate.exec_()
 
     def execute(self):
+        if not os.path.isdir(self.text_input.text()):
+            QMessageBox.information(self, "Error", "未指定输入文件夹")
+        elif not os.path.isdir(self.text_output.text()):
+            QMessageBox.information(self, "Error", "未指定输出文件夹")
+        if not self.checkInputDir():
+            QMessageBox.information(self, "Error", "输入文件夹下没有测序文件")
+        # if
+
+    def checkInputDir(self):
+        inputDir = self.text_input.text()
+        types = ["[1-2].fq.gz", "[1-2].fastq.gz"]
+        files = sum(
+            [glob.glob("{input}/**/*{typen}".format(input=inputDir, typen=type1), recursive=True) for type1 in types],
+            [])
+        return produceFileConfig(files)
+
+    def checkDateConfig(self):
         pass
 
     def choose_dir(self, line):
@@ -82,6 +128,7 @@ class NosoTT_UI(QWidget):
 class CaseDate(QDialog):
     def __init__(self, df):
         super().__init__()
+        self.dateDataframe = pd.read_csv('casedatabase.csv', parse_dates=['Admdate', 'Chgdate', 'Sampdate'])
         self.btn_savecsv = QPushButton('保存')
         self.tableWidge = QTableWidget()
         self.setFixedSize(720, 540)
@@ -118,7 +165,19 @@ class CaseDate(QDialog):
         self.setLayout(layout)
 
     def checkCSV(self):
-        pass
+        rowLength = self.tableWidge.rowCount()
+        names, items, Admdate, Sampdate, Chgdate = [], [], [], [], []
+        caseDict = {'name': names, 'item': items, 'Admdate': Admdate, 'Sampdate': Sampdate, 'Chgdate': Chgdate}
+        for i in range(rowLength):
+            names.append(self.tableWidge.item(i, 0).text())
+            items.append(self.tableWidge.item(i, 1).text())
+            Admdate.append(self.tableWidge.cellWidget(i, 2).date().toString("yyyy-MM-dd"))
+            Sampdate.append(self.tableWidge.cellWidget(i, 3).date().toString("yyyy-MM-dd"))
+            Chgdate.append(self.tableWidge.cellWidget(i, 4).date().toString("yyyy-MM-dd"))
+        caseDataframe = pd.DataFrame(caseDict)
+        db = pd.concat([caseDataframe, self.dateDataframe])
+        db.to_csv('casedatabase.csv', index=False)
+        return True
 
     def saveCSV(self):
         pass

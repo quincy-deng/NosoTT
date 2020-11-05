@@ -1,0 +1,129 @@
+import pandas as pd
+import datetime
+
+configfile: "config/nosott.yaml"
+
+
+def generate_csv(casedata, dirname):
+    dates = ['Admdate', 'Sampdate', 'Chgdate']
+    baseDate = min(casedata['Sampdate'])
+
+    for ind, row in casedata.iterrows():
+        bDate = datetime.datetime.strptime(baseDate, "%Y-%m-%d")
+        Adate, Sdate, Cdate = [datetime.datetime.strptime(row[i], "%Y-%m-%d") for i in dates]
+        casedata['Admdate'][ind], casedata['Sampdate'][ind], casedata['Chgdate'][ind] = \
+            (Adate - bDate).days, (Sdate - bDate).days, (Cdate - bDate).days
+
+    dates = pd.DataFrame({'A': casedata['name'], 'B': casedata['Sampdate']})
+    hosts = pd.DataFrame({'A': casedata['name'], 'B': casedata['item']})
+    hostTimes = pd.DataFrame({'A': casedata['item'], 'B': casedata['Admdate'], 'C': casedata['Chgdate']})
+
+    try:
+        dates.to_csv('output/datefile/{}.dates.csv'.format(dirname), index=False, header=False)
+        hosts.to_csv('output/datefile/{}.hosts.csv'.format(dirname), index=False, header=False)
+        hostTimes.to_csv('output/datefile/{}.hostTimes.csv'.format(dirname), index=False, header=False)
+    except IOError as e:
+        print("Save datefile failed!:%s", e)
+
+    print("Generate date file success")
+
+
+# 写入规则
+rule all:
+    input:
+        expand("output/{sample}_direct_transmissions.jpg", sample=config.keys()),
+        expand("output/{sample}_indirect_transmissions.jpg", sample=config.keys())
+
+rule copy_to_temp:
+    input:
+        lambda wildcards: expand("{file}", file=config[(wildcards.sample)][1:])
+    output:
+        temp('output/fasta/{sample}')
+    shell:
+        "mkdir -p {output};"
+        "rm -f {output}/* ;"
+        "cp {input} {output}"
+
+rule parsnp_align:
+    input:
+        fas = "output/fasta/{sample}",
+        ref = lambda wildcards: config[(wildcards.sample)][0]
+    output:
+        temp("output/parsnp/{sample}"),
+        temp("output/parsnp/{sample}.xmfa")
+    shell:
+        "parsnp -r {input.ref} -o output/parsnp/{wildcards.sample} -d {input.fas} -c -x 1>/dev/null;"
+        "mv output/parsnp/{wildcards.sample}/parsnp.xmfa output/parsnp/{wildcards.sample}.xmfa"
+
+rule harvesttools_transform:
+    input:
+        "output/parsnp/{sample}.xmfa"
+    output:
+        temp("output/parsnp/{sample}.fasta")
+    shell:
+        "harvesttools -x {input} -M {output};"
+        "sed -i 's/.ref//g' {output};"
+        "sed -i 's/.fasta//g' {output}"
+
+rule generate_datefile:
+    input:
+        "data/casedate/casedatabase.csv"
+    output:
+        d = temp('output/datefile/{sample}.dates.csv'),
+        ho = temp('output/datefile/{sample}.hosts.csv'),
+        ht = temp('output/datefile/{sample}.hostTimes.csv'),
+    run:
+        x = (wildcards.sample).split('.')[1].split('_')
+        df = pd.read_csv('data/casedate/casedatabase.csv')
+        df = df[df['item'].isin(x)]
+        generate_csv(df, wildcards.sample)
+
+rule generate_xml:
+    input:
+        scotti_xml = 'scripts/SCOTTI_generate_xml.py',
+        fasta = "output/parsnp/{sample}.fasta",
+        d = 'output/datefile/{sample}.dates.csv',
+        ho = 'output/datefile/{sample}.hosts.csv',
+        ht = 'output/datefile/{sample}.hostTimes.csv'
+    output:
+        temp("output/parsnp/{sample}.xml")
+    params:
+        m = lambda wildcards: len(config[(wildcards.sample)]) + 2,
+        n = 100000
+    shell:
+        "python {input.scotti_xml} "
+        "-d {input.d} -ho {input.ho} -ht {input.ht} "
+        "-m {params.m} -n {params.n} "
+        "-o output/parsnp/{wildcards.sample} -f {input.fasta}"
+
+rule generate_tree:
+    input:
+        xml = "output/parsnp/{sample}.xml",
+        scotti_jar = "scripts/SCOTTI.v2.0.1.jar",
+        jblas_jar = "scripts/jblas-1.2.3.jar",
+        guava_jar = "scripts/guava-15.0.jar",
+        beast_jar = "scripts/beast.jar"
+    output:
+        temp("output/parsnp/{sample}.trees"),
+        temp("output/parsnp/{sample}.log"),
+        temp("{sample}.xml.state")
+    params:
+        "beast.app.beastapp.BeastMain -overwrite"
+    shell:
+        "java -cp "
+        "{input.scotti_jar}:{input.jblas_jar}:{input.guava_jar}:{input.beast_jar} "
+        "{params} {input.xml} 1>/dev/null"
+
+rule generate_jpg:
+    input:
+        tree = "output/parsnp/{sample}.trees",
+        trans_tree = "scripts/Make_transmission_tree_alternative.py"
+    output:
+        "output/{sample}_direct_transmissions.jpg",
+        "output/{sample}_indirect_transmissions.jpg"
+    params:
+        minV = 0.2
+    shell:
+        "python {input.trans_tree} --input {input.tree}  "
+        "--outputF output/{wildcards.sample} "
+        "--minValue {params.minV} "

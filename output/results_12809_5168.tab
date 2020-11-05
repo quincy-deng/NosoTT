@@ -1,0 +1,14 @@
+#FILE	SEQUENCE	START	END	STRAND	GENE	COVERAGE	COVERAGE_MAP	GAPS	%COVERAGE	%IDENTITY	DATABASE	ACCESSION	PRODUCT	RESISTANCE
+/home/dengqiuyang/kp1.fasta	NODE_13_length_149460_cov_102.319862	27993	28853	-	blaSHV-158	1-861/861	===============	0/0	100.00	99.88	ncbi	NG_050033.1	class A beta-lactamase SHV-158	BETA-LACTAM
+/home/dengqiuyang/kp1.fasta	NODE_33_length_58989_cov_110.237184	13987	14406	+	fosA6	1-420/420	===============	0/0	100.00	98.81	ncbi	NG_051497.1	fosfomycin resistance glutathione transferase FosA6	FOSFOMYCIN
+/home/dengqiuyang/kp1.fasta	NODE_58_length_5535_cov_99.236717	1915	2796	+	blaKPC-2	1-882/882	===============	0/0	100.00	100.00	ncbi	NG_049253.1	carbapenem-hydrolyzing class A beta-lactamase KPC-2	CARBAPENEM
+/home/dengqiuyang/kp1.fasta	NODE_67_length_3772_cov_105.544520	2778	3653	-	blaCTX-M-65	1-876/876	===============	0/0	100.00	100.00	ncbi	NG_049016.1	class A extended-spectrum beta-lactamase CTX-M-65	CEPHALOSPORIN
+/home/dengqiuyang/kp2.fasta	NODE_101_length_1077_cov_102.092000	120	995	+	blaCTX-M-65	1-876/876	===============	0/0	100.00	100.00	ncbi	NG_049016.1	class A extended-spectrum beta-lactamase CTX-M-65	CEPHALOSPORIN
+/home/dengqiuyang/kp2.fasta	NODE_12_length_149460_cov_93.716728	120608	121468	+	blaSHV-158	1-861/861	===============	0/0	100.00	99.88	ncbi	NG_050033.1	class A beta-lactamase SHV-158	BETA-LACTAM
+/home/dengqiuyang/kp2.fasta	NODE_34_length_58989_cov_100.961366	44584	45003	-	fosA6	1-420/420	===============	0/0	100.00	98.81	ncbi	NG_051497.1	fosfomycin resistance glutathione transferase FosA6	FOSFOMYCIN
+/home/dengqiuyang/kp2.fasta	NODE_64_length_5975_cov_81.153103	145	911	+	mph(A)	1-767/906	=============..	0/0	84.66	99.87	ncbi	NG_047985.1	Mph(A) family macrolide 2'-phosphotransferase	MACROLIDE
+/home/dengqiuyang/kp2.fasta	NODE_64_length_5975_cov_81.153103	3087	3926	-	sul1	1-840/840	===============	0/0	100.00	100.00	ncbi	NG_048082.1	sulfonamide-resistant dihydropteroate synthase Sul1	SULFONAMIDE
+/home/dengqiuyang/kp2.fasta	NODE_64_length_5975_cov_81.153103	4202	4834	-	catB3	1-633/633	===============	0/0	100.00	100.00	ncbi	NG_047604.1	type B-3 chloramphenicol O-acetyltransferase CatB3	CHLORAMPHENICOL
+/home/dengqiuyang/kp2.fasta	NODE_64_length_5975_cov_81.153103	4972	5802	-	blaOXA-1	1-831/831	===============	0/0	100.00	100.00	ncbi	NG_049392.1	oxacillin-hydrolyzing class D beta-lactamase OXA-1	CEPHALOSPORIN
+/home/dengqiuyang/kp2.fasta	NODE_66_length_5536_cov_87.827441	2739	3620	-	blaKPC-2	1-882/882	===============	0/0	100.00	100.00	ncbi	NG_049253.1	carbapenem-hydrolyzing class A beta-lactamase KPC-2	CARBAPENEM
+/home/dengqiuyang/kp2.fasta	NODE_95_length_1191_cov_70.267504	164	979	+	aph(3')-Ia	1-816/816	===============	0/0	100.00	100.00	ncbi	NG_047430.1	aminoglycoside O-phosphotransferase APH(3')-Ia	KANAMYCIN
