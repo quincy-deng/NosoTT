@@ -1,0 +1,48 @@
+import re
+import os
+import sys
+
+configfile:"config/spades.yaml"
+
+rule all:
+    input:
+        "data/quast_results/report.html"
+
+rule trimmomatic_qc:
+    # noinspection PyRedundantParentheses
+    input:
+        fq1 = lambda wildcards: config[(wildcards.sample)][0],
+        fq2 = lambda wildcards: config[(wildcards.sample)][1]
+    output:
+        fp = temp("data/trimmed/{sample}_forward_paired.fq.gz"),
+        rp = temp("data/trimmed/{sample}_reverse_paired.fq.gz"),
+        fup = temp("data/trimmed/{sample}_reverse_unpaired.fq.gz"),
+        rup = temp("data/trimmed/{sample}_forward_unpaired.fq.gz")
+    threads:1
+    shell:
+        "trimmomatic PE -phred33 -threads {threads} "
+        "{input.fq1} {input.fq2} "
+        "{output.fp} {output.fup} {output.rp} {output.rup} "
+        "LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36 "
+
+rule spades_assembly:
+    input:
+        f = "data/trimmed/{sample}_forward_paired.fq.gz",
+        r = "data/trimmed/{sample}_reverse_paired.fq.gz"
+    output:
+        "data/assembled/{sample}.fasta"
+    threads:5
+    shell:
+        "spades.py -t {threads} "
+        "-1 {input.f} "
+        "-2 {input.r} "
+        "-o data/assembled/{wildcards.sample} 1>/dev/null;"
+        "cp data/assembled/{wildcards.sample}/scaffolds.fasta {output}"
+
+rule quast_qc:
+    input:
+        expand("data/assembled/{sample}.fasta",sample=config.keys())
+    output:
+        "data/quast_results/report.html"
+    shell:
+        "quast.py -o data/quast_results {input}"

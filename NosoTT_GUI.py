@@ -1,6 +1,8 @@
-import os
-import re
 import glob
+import os
+import datetime
+
+import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import (QPushButton, QLabel, QVBoxLayout, QHBoxLayout,
@@ -25,18 +27,23 @@ def produceFileConfig(files):
             file_dict[k] = [v]
         else:
             file_dict[k].append(v)
-    [file_dict.pop(k) for k, v in file_dict.items() if len(v) != 2]
-    if len(file_dict) > 0:
-        return True
-    else:
-        return False
+    F_dict = {k: v for k, v in file_dict.items() if len(v) == 2}
+    return F_dict
+
+
+def checkInputDir(inputDir):
+    types = ["[1-2].fq.gz", "[1-2].fastq.gz"]
+    files = sum(
+        [glob.glob("{input}/**/*{typen}".format(input=inputDir, typen=type1), recursive=True) for type1 in types],
+        [])
+    return produceFileConfig(files)
 
 
 class NosoTT_UI(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.select_df = pd.read_csv('casedatabase.csv', parse_dates=['Admdate', 'Chgdate', 'Sampdate'])
+        self.select_items = dict()
 
         # 控件
         self.btn_casedate = QPushButton('输入样本出入院/采样时间')
@@ -96,8 +103,12 @@ class NosoTT_UI(QWidget):
 
     # NosoTT casedate窗口
     def show_casedate(self):
-        casedate = CaseDate(self.select_df)
-        # casedate.btn_savecsv.clicked.connect(self.saveCSV)
+        if not os.path.isdir(self.text_input.text()):
+            QMessageBox.information(self, "Error", "未指定输入文件夹")
+        self.select_items = checkInputDir(self.text_input.text())
+        if not self.select_items:
+            QMessageBox.information(self, "Error", "请检查输入文件夹")
+        casedate = CaseDate(self.select_items.keys())
         casedate.exec_()
 
     def execute(self):
@@ -105,20 +116,22 @@ class NosoTT_UI(QWidget):
             QMessageBox.information(self, "Error", "未指定输入文件夹")
         elif not os.path.isdir(self.text_output.text()):
             QMessageBox.information(self, "Error", "未指定输出文件夹")
-        if not self.checkInputDir():
+        if not checkInputDir(self.text_input.text()):
             QMessageBox.information(self, "Error", "输入文件夹下没有测序文件")
-        # if
-
-    def checkInputDir(self):
-        inputDir = self.text_input.text()
-        types = ["[1-2].fq.gz", "[1-2].fastq.gz"]
-        files = sum(
-            [glob.glob("{input}/**/*{typen}".format(input=inputDir, typen=type1), recursive=True) for type1 in types],
-            [])
-        return produceFileConfig(files)
+        self.checkDateConfig()
+        # todo:检查出入院时间表格是否完整,符合规范.
+        # TODO:第一步调用组装流程
+        # TODO: 第二步运行主程序
 
     def checkDateConfig(self):
-        pass
+        if not self.select_items:
+            self.select_items = checkInputDir(self.text_input.text())
+            if not self.select_items:
+                QMessageBox.information(self, "Error", "输入文件夹下没有测序文件")
+        db_df = pd.read_csv('data/casedate/casedatabase.csv')
+        for i in self.select_items.keys():
+            if i not in db_df['item']:
+                QMessageBox.information(self, "Error", "缺少 {} 的出入院信息".format(i))
 
     def choose_dir(self, line):
         file_text = QFileDialog.getExistingDirectory(self, '选择fastq/fasta数据文件夹', './')
@@ -126,40 +139,42 @@ class NosoTT_UI(QWidget):
 
 
 class CaseDate(QDialog):
-    def __init__(self, df):
+    def __init__(self, items):
         super().__init__()
-        self.dateDataframe = pd.read_csv('casedatabase.csv', parse_dates=['Admdate', 'Chgdate', 'Sampdate'])
-        self.btn_savecsv = QPushButton('保存')
+        self.df = pd.read_csv('data/casedate/casedatabase.csv', parse_dates=['Admdate', 'Chgdate', 'Sampdate'])
+        self.df = self.df[['name', 'item', 'Admdate', 'Sampdate', 'Chgdate']]
+        dfn = pd.DataFrame({'name': list(items)})
+        self.dfn = dfn.merge(self.df, how='left')
         self.tableWidge = QTableWidget()
         self.setFixedSize(720, 540)
-        self.df = df[['name', 'item', 'Admdate', 'Sampdate', 'Chgdate']]
         self.mainUI()
-
-        # 槽函数
-        self.btn_savecsv.clicked.connect(self.saveCSV)
         self.show()
 
     def mainUI(self):
         layout = QHBoxLayout()
         scrollArea = QScrollArea()
         layout_sc = QHBoxLayout(scrollArea)
-        row, col = self.df.shape
+        row, col = self.dfn.shape
         self.tableWidge.setRowCount(row)
         self.tableWidge.setColumnCount(col)
-        self.tableWidge.setHorizontalHeaderLabels(self.df.columns.tolist())
+        self.tableWidge.setHorizontalHeaderLabels(self.dfn.columns.tolist())
         for i in range(row):
             for j in range(2):
-                self.tableWidge.setItem(i, j, QTableWidgetItem(self.df.iloc[i, j]))
+                text = ''
+                if not pd.isna(self.dfn.iloc[i, j]):
+                    text = self.dfn.iloc[i, j]
+                self.tableWidge.setItem(i, j, QTableWidgetItem(text))
         for i in range(row):
             for j in range(2, 5):
-                date = self.df.iloc[i, j]
+                date = self.dfn.iloc[i, j]
+                if pd.isna(date):
+                    date = datetime.date.today()
                 qdate = QDate(date.year, date.month, date.day)
                 datedit = QDateEdit(qdate)
                 datedit.setDisplayFormat('yyyy-MM-dd')
                 datedit.setCalendarPopup(True)
                 self.tableWidge.setCellWidget(i, j, datedit)
         layout_sc.addWidget(self.tableWidge)
-        layout_sc.addWidget(self.btn_savecsv)
 
         layout.addWidget(scrollArea)
         self.setLayout(layout)
@@ -175,9 +190,19 @@ class CaseDate(QDialog):
             Sampdate.append(self.tableWidge.cellWidget(i, 3).date().toString("yyyy-MM-dd"))
             Chgdate.append(self.tableWidge.cellWidget(i, 4).date().toString("yyyy-MM-dd"))
         caseDataframe = pd.DataFrame(caseDict)
-        db = pd.concat([caseDataframe, self.dateDataframe])
-        db.to_csv('casedatabase.csv', index=False)
+        lack_name = caseDataframe[caseDataframe.isna().T.any()]['name'].to_list()
+        time_error = caseDataframe[~((caseDataframe['Admdate'] < caseDataframe['Sampdate'])
+                                     & (caseDataframe['Sampdate'] < caseDataframe['Chgdate']))]['name'].tolist()
+        QMessageBox.information(self,'Error','')
+        caseDateDF = pd.read_csv('data/casedate/casedatabase.csv')
+        db = pd.concat([caseDataframe, caseDateDF])
+        db.to_csv('data/casedate/casedatabase.csv', index=False)
         return True
 
+    def closeEvent(self, event):
+        self.saveCSV()
+        super(CaseDate, self).closeEvent(event)
+
     def saveCSV(self):
-        pass
+        if not self.checkCSV():
+            QMessageBox.information(self, '警告', '无法保存流行病学信息')

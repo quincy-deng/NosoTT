@@ -3,6 +3,7 @@ import datetime
 
 configfile: "config/nosott.yaml"
 
+# todo:输出文件名称过长,需要修改为ST型
 
 def generate_csv(casedata, dirname):
     dates = ['Admdate', 'Sampdate', 'Chgdate']

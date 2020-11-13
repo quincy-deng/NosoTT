@@ -1,0 +1,12 @@
+data/fasta/1.raw.fasta	paeruginosa	926	acs(29)	aro(1)	gua(97)	mut(99)	nuo(24)	pps(20)	trp(87)
+data/fasta/3.raw.fasta	paeruginosa	179	acs(36)	aro(27)	gua(28)	mut(3)	nuo(4)	pps(13)	trp(7)
+data/fasta/4.raw.fasta	paeruginosa	155	acs(28)	aro(5)	gua(36)	mut(3)	nuo(3)	pps(13)	trp(7)
+data/fasta/6.raw.fasta	paeruginosa	179	acs(36)	aro(27)	gua(28)	mut(3)	nuo(4)	pps(13)	trp(7)
+data/fasta/9.raw.fasta	paeruginosa	179	acs(36)	aro(27)	gua(28)	mut(3)	nuo(4)	pps(13)	trp(7)
+data/fasta/12.raw.fasta	paeruginosa	926	acs(29)	aro(1)	gua(97)	mut(99)	nuo(24)	pps(20)	trp(87)
+data/fasta/2.raw.fasta	paeruginosa	606	acs(23)	aro(5)	gua(57)	mut(30)	nuo(1)	pps(4)	trp(3)
+data/fasta/5.raw.fasta	-	-
+data/fasta/7.raw.fasta	paeruginosa	395	acs(6)	aro(5)	gua(1)	mut(1)	nuo(1)	pps(12)	trp(1)
+data/fasta/8.raw.fasta	paeruginosa	395	acs(6)	aro(5)	gua(1)	mut(1)	nuo(1)	pps(12)	trp(1)
+data/fasta/10.raw.fasta	paeruginosa	1624	acs(6)	aro(5)	gua(6)	mut(11)	nuo(1)	pps(64)	trp(19)
+data/fasta/11.raw.fasta	-	-
