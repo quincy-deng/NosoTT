@@ -4,7 +4,13 @@
     <list>
       <list>
         <remote-mappings server-id="python@sftp://dengqiuyang@172.20.70.157:22/home/dengqiuyang/miniconda3/envs/pyqt/bin/python" />
-        <remote-mappings server-id="python@sftp://dengqiuyang@172.20.70.157:22/home/dengqiuyang/miniconda3/envs/nosott/bin/python" />
+        <remote-mappings server-id="python@sftp://dengqiuyang@172.20.70.157:22/home/dengqiuyang/miniconda3/envs/nosott/bin/python">
+          <settings>
+            <list>
+              <mapping local-root="$PROJECT_DIR$" remote-root="/home/dengqiuyang/SFTP/PyCharmProj_NosoTT" />
+            </list>
+          </settings>
+        </remote-mappings>
       </list>
     </list>
   </component>

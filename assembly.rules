@@ -30,7 +30,7 @@ rule spades_assembly:
         f = "data/trimmed/{sample}_forward_paired.fq.gz",
         r = "data/trimmed/{sample}_reverse_paired.fq.gz"
     output:
-        "data/assembled/{sample}.fasta"
+        "data/fasta/{sample}.fasta"
     threads:5
     shell:
         "spades.py -t {threads} "

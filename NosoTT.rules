@@ -1,5 +1,6 @@
 import pandas as pd
 import datetime
+import os
 
 configfile: "config/nosott.yaml"
 
@@ -74,9 +75,10 @@ rule generate_datefile:
         ho = temp('output/datefile/{sample}.hosts.csv'),
         ht = temp('output/datefile/{sample}.hostTimes.csv'),
     run:
-        x = (wildcards.sample).split('.')[1].split('_')
+        # x = (wildcards.sample).split('.')[1].split('_')
+        x = [os.path.basename(i)[:-6] for i in config[(wildcards.sample)]]
         df = pd.read_csv('data/casedate/casedatabase.csv')
-        df = df[df['item'].isin(x)]
+        df = df[df['name'].isin(x)]
         generate_csv(df, wildcards.sample)
 
 rule generate_xml:
