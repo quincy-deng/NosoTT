@@ -41,7 +41,7 @@ rule spades_assembly:
 
 rule quast_qc:
     input:
-        expand("data/assembled/{sample}.fasta",sample=config.keys())
+        expand("data/fasta/{sample}.fasta",sample=config.keys())
     output:
         "data/quast_results/report.html"
     shell:

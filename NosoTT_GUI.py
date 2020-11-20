@@ -116,6 +116,7 @@ class NosoTT_UI(QWidget):
         self.btn_input.setFixedSize(225, 30)
         self.btn_output.setFixedSize(225, 30)
         self.btn_casedate.setFixedSize(300, 30)
+        self.btn_execute.setFixedSize(300,50)
 
         left_panel.addWidget(QLabel('数据文件夹输入'))
         left_panel.addWidget(self.btn_input)

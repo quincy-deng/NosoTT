@@ -4,6 +4,7 @@ from PyQt5.QtGui import QPixmap
 import time
 from NosoTT_GUI import NosoTT_UI
 from MutiDetect_GUI import MultiDetect
+from assemble_GUI import Assembly
 import sys
 
 
@@ -12,8 +13,8 @@ class Main(QTabWidget):
         super().__init__()
         self.setFixedSize(720, 540)
 
-        self.multi_tab = QWidget()
-        self.assemble_tab = MultiDetect()
+        self.multi_tab = MultiDetect()
+        self.assemble_tab = Assembly()
         self.nst_tab = NosoTT_UI()
 
         self.addTab(self.nst_tab, 'NosoTT')
